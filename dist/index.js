@@ -40,6 +40,7 @@ function getLogs() {
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
+        let dots = '';
         readline.question("How can I help?\n", (question) => __awaiter(this, void 0, void 0, function* () {
             if (question === "getlogs") {
                 const logs = yield getLogs();
@@ -48,6 +49,15 @@ function main() {
                 readline.close();
             }
             else {
+                const interval = setInterval(() => {
+                    process.stdout.write('.');
+                    dots += '.';
+                    if (dots.length === 3) {
+                        process.stdout.clearLine(0);
+                        process.stdout.cursorTo(0);
+                        dots = '';
+                    }
+                }, 500);
                 const aiResponse = yield getAIResponse(question);
                 yield prisma.chatLog.create({
                     data: {
@@ -56,8 +66,14 @@ function main() {
                         response: aiResponse !== null && aiResponse !== void 0 ? aiResponse : "!NO RESPONSE FROM ENDPOINT!",
                     },
                 });
-                console.log("===================\n" + aiResponse);
-                readline.close();
+                setTimeout(() => {
+                    clearInterval(interval);
+                    process.stdout.clearLine(0);
+                    process.stdout.cursorTo(0);
+                    console.log("===================\n" + aiResponse);
+                    readline.close();
+                    return;
+                }); // Replace 5000 with the actual time it takes for the API to respond
             }
         }));
     });

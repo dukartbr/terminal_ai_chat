@@ -26,7 +26,10 @@ async function getLogs() {
   return logs;
 }
 
+
 async function main() {
+  let dots = '';
+
   readline.question("How can I help?\n", async (question: string) => {
     if (question === "getlogs") {
       const logs = await getLogs();
@@ -39,7 +42,17 @@ async function main() {
       console.log(res);
       readline.close();
     } else {
+      const interval = setInterval(() => {
+        process.stdout.write('.');
+        dots += '.';
+        if (dots.length === 3) {
+          process.stdout.clearLine(0);
+          process.stdout.cursorTo(0);
+          dots = '';
+        }
+      }, 500);
       const aiResponse = await getAIResponse(question);
+
       await prisma.chatLog.create({
         data: {
           datetime: new Date(),
@@ -47,8 +60,14 @@ async function main() {
           response: aiResponse ?? "!NO RESPONSE FROM ENDPOINT!",
         },
       });
-      console.log("===================\n" + aiResponse);
-      readline.close();
+      setTimeout(() => {
+        clearInterval(interval);
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+        console.log("===================\n" + aiResponse);
+        readline.close();
+        return
+      }); // Replace 5000 with the actual time it takes for the API to respond
     }
   });
 }
